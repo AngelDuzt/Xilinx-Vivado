@@ -1,0 +1,182 @@
+#######################Design Sources#######################
+
+
+module automat(
+    input clk, 
+    input [1:0] in,
+    output reg [3:0] state,
+    output reg [12:0] value
+);
+
+initial begin
+    state = 0;
+    value = 13'd9594;
+end
+always@(posedge clk)
+begin
+    casex(state)
+        4'd0: begin
+            state <= 4'd1; 
+            value <= 4542;
+         end
+        4'd1: casex(in)
+            2'b0x: begin 
+                state <= 4'd2;
+                value <= 3767;
+            end
+            2'b1x: begin 
+                state <= 4'd3;
+                value <= 513;
+            end
+        endcase
+        4'd2: casex(in)
+            2'b00: begin 
+                state <= state;
+                value <= value;
+            end
+            2'b1x: begin 
+                state <= 4'd4;
+                value <= 23;
+            end
+            2'b01: begin 
+                state <= 4'd5;
+                value <= 4591;
+            end
+        endcase
+        4'd3: casex(in)
+            2'b0x: begin 
+                state <= state;
+                value <= value;
+            end
+            2'b11: begin 
+                state <= 4'd5;
+                value <= 7189;
+            end
+            2'b10: begin 
+                state <= 4'd6;
+                value <= 7108;
+            end
+        endcase
+        4'd4: casex(in)
+            2'b0x: begin 
+                state <= state;
+                value <= value;
+            end
+            2'b1x: begin 
+                state <= 4'd5;
+                value <= 4591;
+            end
+        endcase
+        4'd5: casex(in)
+            2'b0x: begin 
+                state <= 4'd7;
+                value <= 7108;
+            end
+            2'b1x: begin 
+                state <= 4'd8;
+                value <= 8582;
+            end
+        endcase
+        4'd6: casex(in)
+            2'b10: begin
+                state <= state;
+                value <= value;
+            end
+            2'bx1: begin 
+                state <= 4'd5;
+                value <= 4591;
+            end
+            2'b00: begin 
+                state <= 4'd10;
+                value <= 8071;
+            end
+        endcase
+        4'd7: casex(in)
+            2'b10: begin 
+                state <= 4'd4;
+                value <= 23;
+            end
+            2'b11: begin 
+                state <= 4'd2;
+                value <= 3767;
+            end
+            2'b0x: begin 
+                state <= 4'd8;
+                value <= 8582;
+            end
+        endcase
+        4'd8: casex(in)
+            2'b0x: begin 
+                state <= 4'd9;
+                value <= 5419;
+            end
+            2'b10: begin 
+                state <= 4'd10;
+                value <= 8071;
+            end
+            2'b11: begin 
+                state <= 4'd6;
+                value <= 7189;
+            end
+        endcase
+        4'd9: begin 
+                state <= 4'd7;
+                value <= 7108;
+            end
+        4'd10: begin 
+                state <= 4'd0;
+                value <= 9594;
+            end
+    endcase
+end
+ 
+endmodule
+
+
+################################Simulation Sources#################################
+
+
+`timescale 1ns / 1ps
+ 
+ 
+module testbench();
+ 
+ 
+reg clk;
+reg [1:0] in;
+wire [3:0] state;
+wire [12:0] value;
+ 
+initial
+begin
+    clk = 1'b0;
+    
+    in = 2'b00; 
+    #6;
+    in = 2'b11; 
+    #10;
+    in = 2'b00; 
+    #8;
+    in = 2'b11; 
+    #2;
+    in = 2'b01; 
+    #4;
+    in = 2'b10; 
+    #2;
+    in = 2'b01; 
+    #2;
+    in = 2'b10; 
+    #18;
+    in = 2'b00; 
+    #6;
+    in = 2'b11; 
+    #6;
+    in = 2'b10; 
+    #8;
+    in = 2'b01; 
+end
+always #1 clk = ~clk;
+ 
+automat automat(.clk(clk), .in(in), .state(state), .value(value));
+ 
+endmodule

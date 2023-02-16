@@ -1,1 +1,122 @@
-######################Design
+######################Design Sources######################
+
+
+`timescale 1ns / 1ps
+
+
+
+module CodeConverter(
+    input a, b, c, d, e,
+    output f);
+    
+wire [31:0] w0;
+
+dc #(5) dc0(.Ena(1'b1), .a({a, b, c, d, e}), .Y(w0));
+
+assign w1 = w0[2] | w0[6] | w0[7] | w0[8] | w0[11] | w0[12] |w0[15] | w0[16] | 
+w0[18] | w0[19] | w0[20] | w0[21] | w0[24] | w0[25] | w0[28] | w0[29] | w0[30] | w0[31];
+
+assign w2 = w0[0] | w0[1] | w0[3] | w0[4] | w0[5] | w0[9] | w0[10] | w0[13] |
+w0[14] | w0[17] | w0[22] | w0[23] | w0[26] | w0[27];
+
+cd #(.width(1)) cd0(
+    .a({w1, w2}),
+    .Y(f),
+    .Q(wcd)
+);
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module FuncOnMux21(
+    input a, b, c, d, e,
+    output f);
+
+wire w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13;
+
+Muxer mux0(.select(d), .data({~e, 1'b0}), .data_out(w0));
+Muxer mux1(.select(d), .data({1'b1, 1'b0}), .data_out(w1));
+Muxer mux2(.select(d), .data({e, ~e}), .data_out(w2));
+Muxer mux4(.select(d), .data({1'b1, ~e}), .data_out(w4));
+Muxer mux5(.select(d), .data({1'b0, 1'b1}), .data_out(w5));
+
+//////////////////////////////
+
+Muxer mux7(.select(c), .data({w1, w0}), .data_out(w8));
+Muxer mux8(.select(c), .data({w2, w2}), .data_out(w9));
+Muxer mux9(.select(c), .data({w5, w4}), .data_out(w10));
+Muxer mux10(.select(c), .data({1'b1, w5}), .data_out(w11));
+
+//////////////////////////////
+
+Muxer mux11(.select(b), .data({w9, w8}), .data_out(w12));
+Muxer mux12(.select(b), .data({w11, w10}), .data_out(w13));
+
+///////////////////////////////
+
+Muxer mux13(.select(a), .data({w13, w12}), .data_out(f));
+
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module FuncOnDC(
+    input a, b, c, d, e,
+    output f);
+    
+wire [3:0] w1, w2, w3, w4, w5, w6, w7, w8, w9, w10;
+dc dc1(.Ena(~a),.a({b,c}),.Y(w1));
+dc dc2(.Ena(a),.a({b,c}),.Y(w2));
+dc dc3(.Ena(w1[0]),.a({d,e}),.Y(w3));
+dc dc4(.Ena(w1[1]),.a({d,e}),.Y(w4));
+dc dc5(.Ena(w1[2]),.a({d,e}),.Y(w5));
+dc dc6(.Ena(w1[3]),.a({d,e}),.Y(w6));
+dc dc7(.Ena(w2[0]),.a({d,e}),.Y(w7));
+dc dc8(.Ena(w2[1]),.a({d,e}),.Y(w8));
+dc dc9(.Ena(w2[2]),.a({d,e}),.Y(w9));
+dc dc10(.Ena(w2[3]),.a({d,e}),.Y(w10));
+
+assign f = w3[2] | w4[2] | w4[3] | w5[0] | w5[3] | w6[0] | w6[3] | w7[0] | w7[2] | w7[3] |
+w8[0] | w8[1] | w9[0] | w9[1] | w10[0] | w10[1] | w10[2] | w10[3];
+endmodule
+
+
+######################Simulation Sources######################
+
+
+`timescale 1ns / 1ps
+
+
+module test_func_on_muxer();
+
+reg [5:0] args;
+reg clk;
+wire res;
+reg [0:31] reference_reg, error_reg;
+
+initial
+begin
+reference_reg = 32'h2399BCCF;
+args = 5'b00000;
+clk = 0;
+error_reg = 0;
+end
+
+always #10 clk = ~clk;
+
+always@(posedge clk)
+begin
+error_reg[args] = res ~^ reference_reg[args];
+args = args + 1;
+if(args == 6'd33)
+$finish;
+end
+
+FuncOnMux21 test_unit (.a(args[4]), .b(args[3]), .c(args[2]), .d(args[1]), .e(args[0]), .f(res));
+//CodeConverter test_unit (.a(args[4]), .b(args[3]), .c(args[2]), .d(args[1]), .e(args[0]), .f(res));
+//FuncOnDC test_unit (.a(args[4]), .b(args[3]), .c(args[2]), .d(args[1]), .e(args[0]), .f(res));
+
+
+endmodule

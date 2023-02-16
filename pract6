@@ -1,0 +1,85 @@
+###########################Design Sources###########################
+
+
+`timescale 1ns / 1ps
+
+module div(
+	input clk,
+	output reg clk_div
+    );
+
+wire [4:0] count;
+
+initial
+begin
+	clk_div = 0;
+end
+
+counter #(5) counter(.clk(clk), .direct(1'b1), .out(count));
+
+always@(posedge clk)
+begin 
+	if(count == 5'd25 || count == 5'd12) begin
+		clk_div <= ~clk_div;
+	end
+	else clk_div <= clk_div;
+end
+    
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module counter #(width=5, step=1, mod = 2**width) (
+	input clk,
+	input direct,
+	input reset, 
+	output reg [width-1:0] out
+);
+
+initial
+begin
+	out <= 0;
+end
+
+always@(posedge(clk), posedge(reset))
+if(reset) begin
+	out <= 0;
+end
+else if(direct) begin
+	out <= (out + step) % mod;
+end
+else begin
+	out <= (out - step) % mod;
+end
+
+endmodule
+
+
+###################################Simulation Sources##################################
+
+
+`timescale 1ns / 1ps
+
+module test_counter();
+
+reg [25:0]args;
+reg clk;
+wire clk_divided;
+
+initial
+begin
+	clk = 1'b0;
+	args = 1'b0;
+end
+
+always #10 clk = ~clk;
+
+always@(posedge clk)
+begin
+	args = args + 1;
+end
+
+div divider(.clk(clk), .clk_div(clk_divided));
+
+endmodule

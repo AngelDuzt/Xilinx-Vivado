@@ -1,0 +1,140 @@
+#######################Design Sources###########################
+
+
+`timescale 1ns / 1ps
+ 
+module diod_controller(
+    input clk,
+    input button,
+    output reg diod
+    );
+ 
+wire out_signal;
+wire enable;
+ 
+initial
+begin
+    diod <= 0;
+end
+ 
+always @(posedge clk)
+begin
+    if (out_signal && enable) diod <= ~diod;
+end    
+ 
+debounser debounser(.clk(clk), .in_signal(button), .out_signal(out_signal), .enable(enable));
+endmodule
+
+
+`timescale 1ns / 1ps
+module debounser(
+input clk,
+input in_signal,
+output reg out_signal,
+output reg enable
+    );
+initial
+begin
+out_signal <= 0;
+end
+ 
+wire sync_signal;
+wire [3:0] count;
+wire max_count = &count;
+wire reset =  ~(out_signal ^ sync_signal);
+ 
+synchronyser sync(.clk(clk), .signal(in_signal), .signal_sync(sync_signal));
+ 
+counter #(4,1,16) counter(.clk(clk), .reset(reset), .up_down(1'b1), .count(count));
+ 
+always @(posedge clk)
+begin
+    if (max_count) out_signal <= ~out_signal;
+    enable <= max_count & sync_signal;
+end
+endmodule
+
+
+`timescale 1ns / 1ps
+module synchronyser(
+ input wire clk,
+ input wire signal,
+ output wire signal_sync
+);
+reg trigger1, trigger2;
+always @(posedge clk)
+begin
+    trigger1 <= signal;
+    trigger2 <= trigger1;
+end
+assign signal_sync = trigger2;
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module counter#(bit=4, step=1,mod=2**bit)(
+    input clk,
+    input up_down,
+    input reset,
+    output reg [bit-1:0] count
+    );
+initial
+begin
+    count <= 0;
+end
+always @(posedge clk)
+begin
+    if (reset) begin
+        count <= 0;
+    end
+    else if (up_down) begin
+        count <= (count+step)%mod;
+    end
+    else begin
+        count <= (count-step)%mod;
+    end
+end
+endmodule
+
+
+##############################Simulation Sources####################################
+
+
+`timescale 1ns / 1ps
+ 
+ 
+module tester();
+ 
+reg clk;
+ 
+reg IN_SIGNAL;
+ 
+wire diod;
+ 
+initial
+begin
+    clk = 0;
+    $srandom(33985);
+    repeat($urandom_range(30, 0))
+    begin
+        IN_SIGNAL = $random;
+        #3;
+    end
+    IN_SIGNAL <= 1;
+    #30
+    IN_SIGNAL <= 0;
+    #30
+    repeat($urandom_range(30, 0))
+    begin
+        IN_SIGNAL = $random;
+        #3;
+    end
+    IN_SIGNAL <= 1;
+end
+ 
+always #1 clk = ~clk;
+ 
+diod_controller dc(.clk(clk), .button(IN_SIGNAL), .diod(diod));
+ 
+endmodule
